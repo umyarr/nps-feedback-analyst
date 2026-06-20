@@ -364,8 +364,41 @@ def main():
         
     print("Loading workbook...")
     wb = openpyxl.load_workbook(file_path, data_only=True)
-    sheet = wb["Лист1"]
+    # Default to active sheet instead of hardcoded "Лист1"
+    sheet = wb.active
+    print(f"Using sheet: {sheet.title}")
     
+    # Header scanning for column auto-detection (default: C=3, D=4, E=5, F=6)
+    col_rating = 5
+    col_tool = 3
+    col_gap = 4
+    col_comment = 6
+    
+    headers = {}
+    for col in range(1, sheet.max_column + 1):
+        val = sheet.cell(row=1, column=col).value
+        if val is not None:
+            headers[col] = str(val).lower().strip()
+            
+    if headers:
+        # Stage 1: Match main columns (Rating, Tools, Gaps)
+        for col, h in headers.items():
+            if "порекоменд" in h or "вероятно" in h or "шкале от 0 до 10" in h or "nps" in h:
+                col_rating = col
+            elif "теоретический материал" in h or ("инструмент" in h and "примени" in h):
+                col_tool = col
+            elif "не была затронута" in h or "дополнительно" in h or "не хватило" in h:
+                col_gap = col
+                
+        # Stage 2: Match Comment column from remaining columns
+        for col, h in headers.items():
+            if col != col_rating:
+                if "почему" in h or "опиши" in h or "поясни" in h or "комментар" in h or "отзыв" in h:
+                    if col != col_tool and col != col_gap:
+                        col_comment = col
+                        
+        print(f"Detected columns -> Rating: col {col_rating}, Comment: col {col_comment}, Tools: col {col_tool}, Gaps: col {col_gap}")
+        
     # Calculate exact raw stats locally
     ratings = []
     detractor_comments = []
@@ -376,10 +409,10 @@ def main():
     
     print("Parsing rows and filtering comments...")
     for r in range(2, sheet.max_row + 1):
-        rating = sheet.cell(row=r, column=5).value
-        tool_val = sheet.cell(row=r, column=3).value
-        gap_val = sheet.cell(row=r, column=4).value
-        comment_val = sheet.cell(row=r, column=6).value
+        rating = sheet.cell(row=r, column=col_rating).value
+        tool_val = sheet.cell(row=r, column=col_tool).value
+        gap_val = sheet.cell(row=r, column=col_gap).value
+        comment_val = sheet.cell(row=r, column=col_comment).value
         
         # Clean Excel Carriage Return codes
         if tool_val is not None:
