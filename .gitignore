@@ -1,0 +1,10 @@
+.env
+.nps_cache.json
+.*_cache.json
+*.xlsx
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.idea/
+.vscode/
