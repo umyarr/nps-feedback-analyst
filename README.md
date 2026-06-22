@@ -1,186 +1,48 @@
-# NPS Feedback Analyst: Локальный безопасный анализатор отзывов и индекса лояльности
+🌐 [Русский](translations/ru/README.md) | [中文](translations/zh/README.md)
 
-Инструмент для безопасного, экономичного и быстрого анализа качественной обратной связи из опросов удовлетворенности клиентов (NPS). Система спроектирована с учетом защиты персональных данных, борьбы с галлюцинациями ИИ и минимизации затрат на сетевые API.
+# NPS Feedback Analyst
 
-## 🌟 Основные возможности
+A secure, local-first tool for analyzing customer satisfaction surveys and NPS scores.
 
-1. **Три режима анализа**:
-   - **Lite (Алгоритмический)**: 100% локальный контент-анализ на базе частотности слов, биграмм, эвристической категоризации жалоб критиков и центроидного извлечения репрезентативных цитат. Работает оффлайн, бесплатно и за 0.05 сек.
-   - **Локальный ИИ (Ollama)**: Подключение локальных моделей (`gemma2`, `llama3` и др.) без отправки данных за пределы вашего устройства.
-   - **Облачный ИИ (Gemini API)**: Интеграция с моделями Google Gemini с применением методов сжатия и оптимизации запросов.
-2. **Безопасность (Prompt Injection Guard)**:
-   - Принудительное разделение данных и инструкций (Data-Instruction Separation) через XML-тегирование отзывов.
-   - Локальный сканер безопасности, перехватывающий и обезвреживающий попытки взлома и обхода инструкций в отзывах пользователей.
-3. **Борьба с галлюцинациями (Local Evaluator)**:
-   - Локальный расчет точной статистики NPS на уровне кода Python/JavaScript.
-   - Сличение количественных данных в ИИ-отчете с реальными метриками. Выставление статуса доверия к отчету (**"ПОЛНОЕ ДОВЕРИЕ"** или **"ОГРАНИЧЕННОЕ ДОВЕРИЕ"**).
-4. **Экономия токенов и кэширование**:
-   - Группировка и сжатие одинаковых отзывов (Smart Deduplication) — экономит до 50% контекста.
-   - Локальное кэширование отчетов по хэш-ключам таблицы. Если файл не менялся — отчет выдается мгновенно из кэша.
+## Features
 
----
+1. **Three analysis modes**:
+   - **Lite (Algorithmic)**: 100% offline NLP — word frequency, bigrams, heuristic complaint categorization. Free, instant (0.05s).
+   - **Local AI (Ollama)**: Run local models (`gemma2`, `llama3`, etc.) — no data leaves your device.
+   - **Cloud AI (Gemini API)**: Google Gemini integration with query compression and optimization.
 
-## 📂 Структура репозитория
+2. **Prompt Injection Guard**: Data-Instruction Separation via XML tagging. Local scanner intercepts injection attempts in user comments.
 
-```text
-├── index.html                     # Адаптивный веб-дашборд (Glassmorphism) на SheetJS и Chart.js
-├── analyze_feedback_secure.py     # Ядро анализатора (Python) с поддержкой Gemini, Ollama и Lite-режимов
-├── nps_telegram_bot.py            # Код Telegram-бота для экспресс-анализа отзывов по файлам
-├── run_nps_lite.bat               # Батник для быстрого локального анализа на ПК
-├── run_telegram_bot.bat           # Батник для запуска Telegram-бота на ПК
-├── requirements.txt               # Список зависимостей Python
-├── .gitignore                     # Список игнорируемых Git файлов
-└── .env.example                   # Шаблон файла конфигурации токена бота
-```
+3. **Hallucination Shield**: Python calculates exact NPS stats locally. AI report is verified against real metrics — trust status assigned (`FULL TRUST` / `LIMITED TRUST`).
 
----
+4. **Token efficiency**: Smart deduplication saves up to 50% context. MD5-based cache — unchanged files return instant cached reports.
 
-## 🛠️ Локальный запуск и использование
+## Quick start
 
-### Шаг 1. Подготовка окружения
-Убедитесь, что у вас установлен Python (версии 3.8+). Установите зависимости:
 ```bash
 pip install -r requirements.txt
+
+# Lite mode (offline, free)
+python analyze_feedback_secure.py --lite --file "path/to/survey.xlsx"
+
+# Gemini API
+python analyze_feedback_secure.py --file "path/to/survey.xlsx"
+
+# Local Ollama
+python analyze_feedback_secure.py --local --model gemma2 --file "path/to/survey.xlsx"
 ```
 
-### Шаг 2. Использование локального анализатора через CLI
+## Telegram Bot
 
-- **Запуск в режиме Lite** (без использования ИИ, 100% бесплатно и оффлайн):
-  ```bash
-  python analyze_feedback_secure.py --lite --file "путь/к/таблице.xlsx"
-  ```
-  *По умолчанию отчет будет сохранен рядом с исходным Excel-файлом под именем `*_Feedback_Analysis_Report.md`.*
+Send any `.xlsx` file to the bot — get NPS metrics and a full Markdown report back instantly.
 
-- **Запуск через облако Gemini API** (требуется прописать `api_key` в скрипте):
-  ```bash
-  python analyze_feedback_secure.py --file "путь/к/таблице.xlsx"
-  ```
-
-- **Запуск через локальный Ollama** (убедитесь, что сервер Ollama запущен локально):
-  ```bash
-  python analyze_feedback_secure.py --local --model gemma2 --file "путь/к/таблице.xlsx"
-  ```
-
-### Шаг 3. Использование Батника (Windows Drag-and-Drop)
-- Нажмите дважды по `run_nps_lite.bat`, чтобы автоматически проанализировать тестовый файл `Npc.xlsx` на Рабочем столе.
-- Или перетащите мышкой любой файл Excel (`.xlsx`) прямо на иконку `run_nps_lite.bat` — скрипт проанализирует этот файл и сохранит отчет в ту же папку.
-
----
-
-## 🤖 Запуск Telegram-бота (Локально)
-
-1. Зарегистрируйте бота у [@BotFather](https://t.me/BotFather) в Telegram.
-2. Создайте файл `.env` в корневой папке репозитория и укажите ваш токен:
-   ```env
-   TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН_БОТА
-   ```
-3. Запустите бота двойным кликом по файлу `run_telegram_bot.bat` или через консоль:
-   ```bash
-   python nps_telegram_bot.py
-   ```
-4. Отправьте боту в Telegram любой файл Excel `.xlsx`. Бот мгновенно пришлет расчет метрик в сообщении и прикрепит подробный Markdown-отчет.
-
----
-
-## ☁️ Деплой Telegram-бота на Linux VPS
-
-Для того чтобы бот работал круглосуточно на удаленном VPS сервере (например, под управлением Ubuntu), выполните следующие шаги:
-
-### 1. Подключение к VPS и установка окружения
-Подключитесь к вашему серверу через SSH:
 ```bash
-ssh root@your_vps_ip
-```
-Обновите пакеты и установите Python, pip и Git:
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3 python3-pip python3-venv git -y
+# .env
+TELEGRAM_BOT_TOKEN=your_token
+
+python nps_telegram_bot.py
 ```
 
-### 2. Клонирование репозитория
-Склонируйте репозиторий с проектом в папку `/opt`:
-```bash
-cd /opt
-sudo git clone <URL_ВАШЕГО_РЕПОЗИТОРИЯ_НА_GITHUB> nps-feedback-analyst
-cd nps-feedback-analyst
-```
+## Stack
 
-### 3. Создание виртуального окружения и установка библиотек
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 4. Настройка токена
-Создайте файл `.env` с токеном вашего бота:
-```bash
-nano .env
-```
-Вставьте строку:
-```env
-TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН_БОТА
-```
-Для сохранения нажмите `Ctrl+O`, затем `Enter`, для выхода `Ctrl+X`.
-
-### 5. Создание Systemd службы (для работы в фоне и автозапуска)
-Создайте конфигурационный файл службы:
-```bash
-sudo nano /etc/systemd/system/npsbot.service
-```
-Вставьте следующее содержимое (замените пути, если использовали другие):
-```ini
-[Unit]
-Description=NPS Feedback Analyst Telegram Bot
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/nps-feedback-analyst
-ExecStart=/opt/nps-feedback-analyst/venv/bin/python /opt/nps-feedback-analyst/nps_telegram_bot.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### 6. Запуск службы и проверка статуса
-Загрузите новую конфигурацию systemd, включите автозапуск службы при загрузке системы и запустите её:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable npsbot
-sudo systemctl start npsbot
-```
-
-Проверьте статус службы (должен быть `active (running)`):
-```bash
-sudo systemctl status npsbot
-```
-
-Посмотреть логи бота в реальном времени можно командой:
-```bash
-sudo journalctl -u npsbot -f
-```
-
-Теперь ваш Telegram-бот круглосуточно работает в фоновом режиме на VPS сервере и готов принимать файлы от пользователей!
-
----
-
-## ⚡ Автоматический быстрый деплой и обновления (vps_deploy.py)
-
-Вместо ручного ввода команд на сервере, вы можете автоматически развернуть проект или обновить его файлы на VPS прямо с вашего рабочего компьютера.
-
-1. Убедитесь, что в файле `.env` на вашем компьютере прописаны токен бота и пароль от VPS:
-   ```env
-   TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН_БОТА
-   VPS_PASSWORD=ПАРОЛЬ_ОТ_СЕРВЕРА_ROOT
-   ```
-2. Запустите скрипт автоматического деплоя:
-   ```bash
-   python vps_deploy.py
-   ```
-
-Скрипт сам подключится по SSH, установит необходимые системные библиотеки, загрузит актуальные файлы по SFTP, настроит окружение `venv` и перезапустит службу `npsbot` в `systemd` для применения изменений.
-
+`Python` `Gemini API` `Ollama` `openpyxl` `aiogram` `systemd`
